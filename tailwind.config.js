@@ -4,6 +4,6 @@ module.exports = {
 	safelist: [],
 	plugins: [require("daisyui")],
 	daisyui: {
-		themes: ["forest"]
+		themes: ["winter"]
 	}
 }

@@ -1,8 +1,10 @@
 package layout
 
+import "com.github.denisbytes.goimageai/view/ui"
+
 templ App(nav bool){
     <!DOCTYPE html>
-	<html lang="en" data-theme="forest">
+	<html lang="en" data-theme="winter">
 		<head>
 			<title>GoImageAi</title>
 			// <link rel="icon" type="image/x-icon" href="/public/favicon.ico"/>
@@ -14,7 +16,9 @@ templ App(nav bool){
 			<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
 		</head>
 		<body class="antialiased">
-			<p class="text-5xl">Hello World</p>
+			if nav {
+				@ui.Navigation()
+			}
 			{ children... }
 		</body>
 	</html>

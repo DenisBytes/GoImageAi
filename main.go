@@ -21,11 +21,13 @@ func main() {
 	}
 	router := chi.NewMux()
 
+	router.Use(handler.WithUser)
+
 	// Handler for static files
 	router.Handle("/*", http.StripPrefix("/", http.FileServer(http.FS(FS))))
 
 	router.Get("/", handler.MakeHandler(handler.HandleHomeIndex))
-
+	router.Get("/login", handler.MakeHandler(handler.HandleLogInIndex))
 	port := os.Getenv("HTTP_LISTEN_ADDR")
 	slog.Info("application running", "port", port)
 	log.Fatal(http.ListenAndServe(port, router))
