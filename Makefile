@@ -11,7 +11,7 @@ install:
 	@npm install -D daisyui@latest
 
 build:
-	tailwindcss -i view/css/app.css -o public/styles.css 
+	npx tailwindcss -i view/css/app.css -o public/styles.css 
 	@templ generate view
 	@go build -o bin/goimageai main.go 
 

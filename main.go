@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"com.github.denisbytes.goimageai/handler"
+	"com.github.denisbytes.goimageai/pkg/sb"
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 )
@@ -28,11 +29,16 @@ func main() {
 
 	router.Get("/", handler.MakeHandler(handler.HandleHomeIndex))
 	router.Get("/login", handler.MakeHandler(handler.HandleLogInIndex))
+	router.Post("/login", handler.MakeHandler(handler.HandleLoginPost))
+
 	port := os.Getenv("HTTP_LISTEN_ADDR")
 	slog.Info("application running", "port", port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
 
 func initEnvVar() error {
-	return godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		return err
+	}
+	return sb.Init()
 }
