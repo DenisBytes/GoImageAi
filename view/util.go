@@ -3,13 +3,13 @@ package view
 import (
 	"context"
 
-	"com.github.denisbytes.goimageai/models"
+	"com.github.denisbytes.goimageai/types"
 )
 
-func AuthenticatedUser(ctx context.Context) models.AuthenticatedUser {
-	user, ok := ctx.Value(models.UserContextKey).(models.AuthenticatedUser)
+func AuthenticatedUser(ctx context.Context) types.AuthenticatedUser {
+	user, ok := ctx.Value(types.UserContextKey).(types.AuthenticatedUser)
 	if !ok {
-		return models.AuthenticatedUser{}
+		return types.AuthenticatedUser{}
 	}
 	return user
 }

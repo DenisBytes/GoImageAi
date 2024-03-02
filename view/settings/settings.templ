@@ -1,0 +1,10 @@
+package settings
+
+import "com.github.denisbytes.goimageai/view/layout"
+import "com.github.denisbytes.goimageai/types"
+
+templ Index(user types.AuthenticatedUser) {
+    @layout.App(true) {
+        <div>Hello {user.Email}</div>
+    }
+}

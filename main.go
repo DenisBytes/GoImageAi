@@ -32,6 +32,13 @@ func main() {
 	router.Post("/login", handler.MakeHandler(handler.HandleLoginPost))
 	router.Get("/signup", handler.MakeHandler(handler.HandleSignUpIndex))
 	router.Post("/signup", handler.MakeHandler(handler.HandleSignUpPost))
+	router.Get("/auth/callback", handler.MakeHandler(handler.HandleAuthCallback))
+	router.Post("/logout", handler.MakeHandler(handler.HandleLogoutPost))
+
+	router.Group(func(auth chi.Router) {
+		auth.Use(handler.WithAuth)
+		auth.Get("/settings", handler.MakeHandler(handler.HandleSettingsIndex))
+	})
 
 	port := os.Getenv("HTTP_LISTEN_ADDR")
 	slog.Info("application running", "port", port)

@@ -127,3 +127,11 @@ templ SignUpSuccess(email string) {
 		A confirmation email has been sent to: <span class="font-semibold text-success"> {email} </span>
 	</div>
 }
+
+templ CallbackScript() {
+	<script>
+		var url = window.location.href;
+		var newURL = url.replace("#", "?")
+		window.location = newURL
+	</script>
+}

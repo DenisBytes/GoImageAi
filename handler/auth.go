@@ -52,20 +52,45 @@ func HandleLoginPost(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		slog.Error("login error", "err", err)
 		return auth.LoginForm(credentials, auth.LoginErrors{
-			Email:    r.FormValue("email"),
-			Password: r.FormValue("password"),
+			InvalidCredentials: "The crdentials you have entered are invalid",
 		}).Render(r.Context(), w)
 	}
 
+	setAuthCookie(w, resp.AccessToken)
+	return hxRedirect(w, r, "/")
+}
+
+func HandleAuthCallback(w http.ResponseWriter, r *http.Request) error {
+	accessToken := r.URL.Query().Get("access_token")
+	if len(accessToken) == 0 {
+		return auth.CallbackScript().Render(r.Context(), w)
+	}
+	setAuthCookie(w, accessToken)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return nil
+}
+
+func setAuthCookie(w http.ResponseWriter, accessToken string) {
 	cookie := &http.Cookie{
-		Value:    resp.AccessToken,
+		Value:    accessToken,
 		Name:     "at",
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
 	}
 	http.SetCookie(w, cookie)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
 
+func HandleLogoutPost(w http.ResponseWriter, r *http.Request) error {
+	cookie := http.Cookie{
+		Value:    "",
+		Name:     "at",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+	}
+	http.SetCookie(w, &cookie)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 	return nil
 }
