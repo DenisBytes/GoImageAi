@@ -3,10 +3,12 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+	"os"
 
 	"com.github.denisbytes.goimageai/pkg/kit/validate"
 	"com.github.denisbytes.goimageai/pkg/sb"
 	"com.github.denisbytes.goimageai/view/auth"
+	"github.com/gorilla/sessions"
 	"github.com/nedpals/supabase-go"
 )
 
@@ -55,8 +57,9 @@ func HandleLoginPost(w http.ResponseWriter, r *http.Request) error {
 			InvalidCredentials: "The crdentials you have entered are invalid",
 		}).Render(r.Context(), w)
 	}
-
-	setAuthCookie(w, resp.AccessToken)
+	if err := setAuthSession(w, r, resp.AccessToken); err != nil {
+		return err
+	}
 	return hxRedirect(w, r, "/")
 }
 
@@ -65,32 +68,37 @@ func HandleAuthCallback(w http.ResponseWriter, r *http.Request) error {
 	if len(accessToken) == 0 {
 		return auth.CallbackScript().Render(r.Context(), w)
 	}
-	setAuthCookie(w, accessToken)
+	if err := setAuthSession(w, r, accessToken); err != nil {
+		return err
+	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 	return nil
 }
 
-func setAuthCookie(w http.ResponseWriter, accessToken string) {
-	cookie := &http.Cookie{
-		Value:    accessToken,
-		Name:     "at",
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-	}
-	http.SetCookie(w, cookie)
+func setAuthSession(w http.ResponseWriter, r *http.Request, accessToken string) error {
+	store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+	session, _ := store.Get(r, "user")
+	session.Values["accessToken"] = accessToken
+	return session.Save(r, w)
 }
 
 func HandleLogoutPost(w http.ResponseWriter, r *http.Request) error {
-	cookie := http.Cookie{
-		Value:    "",
-		Name:     "at",
-		MaxAge:   -1,
-		HttpOnly: true,
-		Path:     "/",
-		Secure:   true,
-	}
-	http.SetCookie(w, &cookie)
+	store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+	session, _ := store.Get(r, "user")
+	session.Values["accessToken"] = ""
+	session.Save(r, w)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	return nil
+}
+
+func HandleLoginWithGithubPost(w http.ResponseWriter, r *http.Request) error {
+	resp, err := sb.Client.Auth.SignInWithProvider(supabase.ProviderSignInOptions{
+		Provider:   "github",
+		RedirectTo: "http://localhost:3000/auth/callback",
+	})
+	if err != nil {
+		return err
+	}
+	http.Redirect(w, r, resp.URL, http.StatusSeeOther)
 	return nil
 }

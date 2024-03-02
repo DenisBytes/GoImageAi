@@ -3,10 +3,12 @@ package handler
 import (
 	"context"
 	"net/http"
+	"os"
 	"strings"
 
 	"com.github.denisbytes.goimageai/pkg/sb"
 	"com.github.denisbytes.goimageai/types"
+	"github.com/gorilla/sessions"
 )
 
 func WithUser(next http.Handler) http.Handler {
@@ -15,13 +17,16 @@ func WithUser(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		cookie, err := r.Cookie("at")
+
+		store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+		session, err := store.Get(r, "user")
 		if err != nil {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		resp, err := sb.Client.Auth.User(r.Context(), cookie.Value)
+		accessToken := session.Values["accessToken"]
+		resp, err := sb.Client.Auth.User(r.Context(), accessToken.(string))
 		if err != nil {
 			next.ServeHTTP(w, r)
 			return

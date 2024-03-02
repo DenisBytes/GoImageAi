@@ -52,6 +52,8 @@ templ LoginForm(creds supabase.UserCredentials, errors LoginErrors) {
 			<div class="text-sm text-error">{ errors.InvalidCredentials }</div>
 		}
 		<button type="submit" class="btn btn-primary w-full">Login <i class="fa-solid fa-arrow-right"></i></button>
+		<div class="divider">OR</div>
+		<a href="/login/provider/github" class="btn bg-[#000] hover:text-black text-white w-full">Login with GitHub<i class="fa-brands fa-github"></i></a>
 	</form>
 }
 
