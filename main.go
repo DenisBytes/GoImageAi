@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"com.github.denisbytes.goimageai/db"
 	"com.github.denisbytes.goimageai/handler"
 	"com.github.denisbytes.goimageai/pkg/sb"
 	"github.com/go-chi/chi/v5"
@@ -48,6 +49,9 @@ func main() {
 
 func initEnvVar() error {
 	if err := godotenv.Load(); err != nil {
+		return err
+	}
+	if err := db.Init(); err != nil {
 		return err
 	}
 	return sb.Init()
