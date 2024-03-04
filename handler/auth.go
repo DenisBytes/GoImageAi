@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"os"
 
+	"com.github.denisbytes.goimageai/db"
 	"com.github.denisbytes.goimageai/pkg/kit/validate"
 	"com.github.denisbytes.goimageai/pkg/sb"
+	"com.github.denisbytes.goimageai/types"
 	"com.github.denisbytes.goimageai/view/auth"
 	"github.com/gorilla/sessions"
 	"github.com/nedpals/supabase-go"
@@ -101,4 +103,30 @@ func HandleLoginWithGithubPost(w http.ResponseWriter, r *http.Request) error {
 	}
 	http.Redirect(w, r, resp.URL, http.StatusSeeOther)
 	return nil
+}
+
+func HandleAccountSetupIndex(w http.ResponseWriter, r *http.Request) error {
+	return auth.AccountSetup().Render(r.Context(), w)
+}
+
+func HandleAccountSetupPost(w http.ResponseWriter, r *http.Request) error {
+	params := auth.AccountSetupParams{
+		Username: r.FormValue("username"),
+	}
+	var errors auth.AccountSetupErrors
+	ok := validate.New(&params, validate.Fields{
+		"username": validate.Rules(validate.Min(3), validate.Max(50)),
+	}).Validate(&errors)
+	if !ok {
+		return auth.AccountSetupForm(params, errors).Render(r.Context(), w)
+	}
+	user := GetAuthenticatedUser(r)
+	account := types.Account{
+		UserID:   user.ID,
+		Username: params.Username,
+	}
+	if err := db.CreateAccount(&account); err != nil {
+		return err
+	}
+	return hxRedirect(w, r, "/")
 }

@@ -28,7 +28,6 @@ func main() {
 	// Handler for static files
 	router.Handle("/*", http.StripPrefix("/", http.FileServer(http.FS(FS))))
 
-	router.Get("/", handler.MakeHandler(handler.HandleHomeIndex))
 	router.Get("/login", handler.MakeHandler(handler.HandleLogInIndex))
 	router.Get("/login/provider/github", handler.MakeHandler(handler.HandleLoginWithGithubPost))
 	router.Post("/login", handler.MakeHandler(handler.HandleLoginPost))
@@ -36,9 +35,12 @@ func main() {
 	router.Post("/signup", handler.MakeHandler(handler.HandleSignUpPost))
 	router.Get("/auth/callback", handler.MakeHandler(handler.HandleAuthCallback))
 	router.Post("/logout", handler.MakeHandler(handler.HandleLogoutPost))
+	router.Get("/account/setup", handler.MakeHandler(handler.HandleAccountSetupIndex))
+	router.Post("/account/setup", handler.MakeHandler(handler.HandleAccountSetupPost))
 
 	router.Group(func(auth chi.Router) {
-		auth.Use(handler.WithAuth)
+		auth.Use(handler.WithAccountSetup)
+		auth.Get("/", handler.MakeHandler(handler.HandleHomeIndex))
 		auth.Get("/settings", handler.MakeHandler(handler.HandleSettingsIndex))
 	})
 
