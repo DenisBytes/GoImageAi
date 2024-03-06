@@ -104,7 +104,6 @@ func HandleLoginWithGithubPost(w http.ResponseWriter, r *http.Request) error {
 	http.Redirect(w, r, resp.URL, http.StatusSeeOther)
 	return nil
 }
-
 func HandleAccountSetupIndex(w http.ResponseWriter, r *http.Request) error {
 	return auth.AccountSetup().Render(r.Context(), w)
 }
@@ -115,7 +114,7 @@ func HandleAccountSetupPost(w http.ResponseWriter, r *http.Request) error {
 	}
 	var errors auth.AccountSetupErrors
 	ok := validate.New(&params, validate.Fields{
-		"username": validate.Rules(validate.Min(3), validate.Max(50)),
+		"Username": validate.Rules(validate.Min(2), validate.Max(50)),
 	}).Validate(&errors)
 	if !ok {
 		return auth.AccountSetupForm(params, errors).Render(r.Context(), w)
@@ -128,5 +127,6 @@ func HandleAccountSetupPost(w http.ResponseWriter, r *http.Request) error {
 	if err := db.CreateAccount(&account); err != nil {
 		return err
 	}
+	user.Account = account
 	return hxRedirect(w, r, "/")
 }

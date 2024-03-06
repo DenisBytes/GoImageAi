@@ -28,6 +28,7 @@ func main() {
 	// Handler for static files
 	router.Handle("/*", http.StripPrefix("/", http.FileServer(http.FS(FS))))
 
+	router.Get("/", handler.MakeHandler(handler.HandleHomeIndex))
 	router.Get("/login", handler.MakeHandler(handler.HandleLogInIndex))
 	router.Get("/login/provider/github", handler.MakeHandler(handler.HandleLoginWithGithubPost))
 	router.Post("/login", handler.MakeHandler(handler.HandleLoginPost))
@@ -40,8 +41,8 @@ func main() {
 
 	router.Group(func(auth chi.Router) {
 		auth.Use(handler.WithAccountSetup)
-		auth.Get("/", handler.MakeHandler(handler.HandleHomeIndex))
 		auth.Get("/settings", handler.MakeHandler(handler.HandleSettingsIndex))
+		auth.Put("/settings/account/profile", handler.MakeHandler(handler.HandleSettingsUsernameUpdate))
 	})
 
 	port := os.Getenv("HTTP_LISTEN_ADDR")
