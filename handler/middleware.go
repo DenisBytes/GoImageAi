@@ -37,9 +37,10 @@ func WithUser(next http.Handler) http.Handler {
 		}
 
 		user := types.AuthenticatedUser{
-			ID:       uuid.MustParse(resp.ID),
-			Email:    resp.Email,
-			LoggedIn: true,
+			ID:          uuid.MustParse(resp.ID),
+			Email:       resp.Email,
+			LoggedIn:    true,
+			AccessToken: accessToken.(string),
 		}
 
 		ctx := context.WithValue(r.Context(), types.UserContextKey, user)
@@ -56,7 +57,8 @@ func WithAuth(next http.Handler) http.Handler {
 		}
 		user := GetAuthenticatedUser(r)
 		if !user.LoggedIn {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			path:= r.URL.Path
+			http.Redirect(w, r, "/login?to="+path, http.StatusSeeOther)
 			return
 		}
 

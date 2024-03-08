@@ -6,8 +6,10 @@ import (
 
 templ Index() {
     @layout.App(true) {
-        <div class="text-5xl text-accent">
-            Hello from the home page
+        <div class="w-full max-w-screen-xl mx-auto text-center py-12">
+            <h1 class="font-black text-5xl leading-[1,2] mb-2">Hello from the home page</h1>
+            <h2 class="text-xl font-semibold mb-2">this is some AI application</h2>
+            <button class="btn btn-primary">Generate Images Now <i class="fa-solid fa-arrow-right"></i></button>
         </div>
     }
 }

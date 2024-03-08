@@ -36,11 +36,15 @@ func main() {
 	router.Post("/signup", handler.MakeHandler(handler.HandleSignUpPost))
 	router.Get("/auth/callback", handler.MakeHandler(handler.HandleAuthCallback))
 	router.Post("/logout", handler.MakeHandler(handler.HandleLogoutPost))
-	router.Get("/account/setup", handler.MakeHandler(handler.HandleAccountSetupIndex))
-	router.Post("/account/setup", handler.MakeHandler(handler.HandleAccountSetupPost))
 
 	router.Group(func(auth chi.Router) {
-		auth.Use(handler.WithAccountSetup)
+		auth.Use(handler.WithAuth)
+		auth.Get("/account/setup", handler.MakeHandler(handler.HandleAccountSetupIndex))
+		auth.Post("/account/setup", handler.MakeHandler(handler.HandleAccountSetupPost))
+	})
+
+	router.Group(func(auth chi.Router) {
+		auth.Use(handler.WithAuth, handler.WithAccountSetup)
 		auth.Get("/settings", handler.MakeHandler(handler.HandleSettingsIndex))
 		auth.Put("/settings/account/profile", handler.MakeHandler(handler.HandleSettingsUsernameUpdate))
 
@@ -48,6 +52,7 @@ func main() {
 		auth.Post("/auth/reset-password", handler.MakeHandler(handler.HandleResetPasswordPost))
 		auth.Put("/auth/reset-password", handler.MakeHandler(handler.HandleResetPasswordUpdate))
 
+		auth.Get("/generate", handler.MakeHandler(handler.HandleGenerateIndex))
 	})
 
 	port := os.Getenv("HTTP_LISTEN_ADDR")

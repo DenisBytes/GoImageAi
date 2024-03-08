@@ -6,6 +6,8 @@ import (
 	"github.com/nedpals/supabase-go"
 )
 
+const BaseAuthURL = "https://pkjyclkclzvrxbathtrl.supabase.co/auth/v1/recover"
+
 var Client *supabase.Client
 
 // not same as built-in init func

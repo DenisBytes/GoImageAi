@@ -7,9 +7,10 @@ import (
 const UserContextKey = "user"
 
 type AuthenticatedUser struct {
-	ID       uuid.UUID
-	Email    string
-	LoggedIn bool
-	
+	ID          uuid.UUID
+	Email       string
+	LoggedIn    bool
+	AccessToken string
+
 	Account
 }

@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -137,12 +140,37 @@ func HandleResetPasswordIndex(w http.ResponseWriter, r *http.Request) error {
 
 func HandleResetPasswordPost(w http.ResponseWriter, r *http.Request) error {
 	user := GetAuthenticatedUser(r)
-	if err := sb.Client.Auth.ResetPasswordForEmail(r.Context(), user.Email); err != nil {
+	params := map[string]any{
+		"email":      user.Email,
+		"redirectTo": "http://localhost:3000/auth/reset-password",
+	}
+	b, err := json.Marshal(params)
+	if err != nil {
 		return err
 	}
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s", sb.BaseAuthURL), bytes.NewReader(b))
+	req.Header.Set("apikey", os.Getenv("SUPABASE_SECRET"))
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("supabase password recovery responded with a non 200status code: %d", resp.StatusCode)
+	}
+
 	return auth.ResetPasswordInitiated(user.Email).Render(r.Context(), w)
 }
 
 func HandleResetPasswordUpdate(w http.ResponseWriter, r *http.Request) error {
+	user := GetAuthenticatedUser(r)
+	params := map[string]any{
+		"password": r.FormValue("password"),
+	}
+	resp, err := sb.Client.Auth.UpdateUser(r.Context(), user.AccessToken, params)
+	if err != nil {
+		return auth.ResetPasswordForm(auth.ResetPasswordErrors{NewPassword: "Please enter a valid password"}).Render(r.Context(), w)
+	}
+	_ = resp
 	return hxRedirect(w, r, "/")
 }
