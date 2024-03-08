@@ -121,12 +121,28 @@ func HandleAccountSetupPost(w http.ResponseWriter, r *http.Request) error {
 	}
 	user := GetAuthenticatedUser(r)
 	account := types.Account{
+
 		UserID:   user.ID,
 		Username: params.Username,
 	}
 	if err := db.CreateAccount(&account); err != nil {
 		return err
 	}
-	user.Account = account
+	return hxRedirect(w, r, "/")
+}
+
+func HandleResetPasswordIndex(w http.ResponseWriter, r *http.Request) error {
+	return auth.ResetPassword().Render(r.Context(), w)
+}
+
+func HandleResetPasswordPost(w http.ResponseWriter, r *http.Request) error {
+	user := GetAuthenticatedUser(r)
+	if err := sb.Client.Auth.ResetPasswordForEmail(r.Context(), user.Email); err != nil {
+		return err
+	}
+	return auth.ResetPasswordInitiated(user.Email).Render(r.Context(), w)
+}
+
+func HandleResetPasswordUpdate(w http.ResponseWriter, r *http.Request) error {
 	return hxRedirect(w, r, "/")
 }

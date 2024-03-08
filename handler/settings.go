@@ -24,6 +24,7 @@ func HandleSettingsUsernameUpdate(w http.ResponseWriter, r *http.Request) error 
 	if !ok {
 		return settings.ProfileForm(params, errors).Render(r.Context(), w)
 	}
+
 	user := GetAuthenticatedUser(r)
 	user.Account.Username = params.Username
 	if err := db.UpdateAccount(&user.Account); err != nil {

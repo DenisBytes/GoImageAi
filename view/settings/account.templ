@@ -2,6 +2,7 @@ package settings
 
 import "com.github.denisbytes.goimageai/view/layout"
 import "com.github.denisbytes.goimageai/types"
+import "com.github.denisbytes.goimageai/view/ui"
 
 type ProfileParams struct {
     Username string
@@ -26,11 +27,8 @@ templ Index(user types.AuthenticatedUser) {
 				<div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 items-center mt-8">
 					<dt class="">Reset Password</dt>
 					<dd class="sm:col-span-2 sm:mt-0">
-						<form
-							hx-post="/auth/reset-password"
-							hx-swap="outerHTML"
-						>
-							<button class="btn btn-primary">reset password</button>
+						<form hx-post="/auth/reset-password" hx-swap="outerHTML" >
+							<button class="btn btn-primary">Reset password</button>
 						</form>
 					</dd>
 				</div>
@@ -48,11 +46,7 @@ templ ProfileForm(params ProfileParams, errors ProfileErrors) {
 			<dt class="">Username</dt>
 			<dd class="sm:col-span-2 sm:mt-0">
 				if params.Success {
-					<div class="toast toast-top toast-end">
-                        <div class="alert alert-success">
-                            <span>Username Updated</span>
-                        </div>
-                    </div>
+					@ui.Toast("Account Updated")
 				}
 				<input
 					class="input input-bordered w-full max-w-sm"
@@ -65,7 +59,7 @@ templ ProfileForm(params ProfileParams, errors ProfileErrors) {
 			</dd>
 			<dt></dt>
 			<dd class="sm:col-span-2 sm:mt-0">
-				<button class="btn btn-primary">save</button>
+				<button class="btn btn-primary">Save</button>
 			</dd>
 		</div>
 	</form>
