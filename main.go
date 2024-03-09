@@ -53,6 +53,9 @@ func main() {
 		auth.Put("/auth/reset-password", handler.MakeHandler(handler.HandleResetPasswordUpdate))
 
 		auth.Get("/generate", handler.MakeHandler(handler.HandleGenerateIndex))
+		auth.Post("/generate", handler.MakeHandler(handler.HandleGeneratePost))
+		auth.Get("/generate/image/status/{id}", handler.MakeHandler(handler.HandleGenerateImageStatus))
+
 	})
 
 	port := os.Getenv("HTTP_LISTEN_ADDR")
