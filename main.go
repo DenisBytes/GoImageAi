@@ -21,9 +21,10 @@ func main() {
 	if err := initEnvVar(); err != nil {
 		log.Fatal("Init err: ", err)
 	}
+
 	router := chi.NewMux()
 
-	router.Use(handler.WithUser)
+	// router.Use(handler.WithUser)
 
 	// Handler for static files
 	router.Handle("/*", http.StripPrefix("/", http.FileServer(http.FS(FS))))
@@ -36,6 +37,7 @@ func main() {
 	router.Post("/signup", handler.MakeHandler(handler.HandleSignUpPost))
 	router.Get("/auth/callback", handler.MakeHandler(handler.HandleAuthCallback))
 	router.Post("/logout", handler.MakeHandler(handler.HandleLogoutPost))
+	router.Post("/replicate/callback/{userID}/{batchID}", handler.MakeHandler(handler.HandleReplicateCallback))
 
 	router.Group(func(auth chi.Router) {
 		auth.Use(handler.WithAuth)

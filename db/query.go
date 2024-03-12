@@ -46,3 +46,12 @@ func CreateImage(image *types.Image) error {
 
 	return err
 }
+
+func GetImagesByBatchID(batchID uuid.UUID) ([]types.Image, error) {
+	var images []types.Image
+	err := Bun.NewSelect().Model(&images).
+		Where("batch_id = ?", batchID	).
+		Order("created_at desc").
+		Scan(context.Background())
+	return images, err
+}
