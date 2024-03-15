@@ -4,9 +4,12 @@ import "com.github.denisbytes.goimageai/view/layout"
 import "com.github.denisbytes.goimageai/types"
 import "fmt"
 import "com.github.denisbytes.goimageai/view"
+import "com.github.denisbytes.goimageai/view/ui"
 
 type ViewData struct {
-    Images []types.Image
+	Images     []types.Image
+	FormParams FormData
+	FormErrors FormErrors
 }
 
 templ Index(data ViewData){
@@ -32,7 +35,7 @@ templ Gallery(images []types.Image){
 
 templ GalleryImage(image types.Image){
     if image.Status == types.ImageStatusCompleted {
-        <div class="bg-green-100 rounded-xl aspect-[2/3] cursor-pointer">
+        <div class="rounded-xl aspect-[2/3] cursor-pointer">
             <img src={image.ImageLocation} class="object-cover rounded-xl" />
         </div>
     } else if image.Status == types.ImageStatusFailed {
@@ -48,14 +51,17 @@ templ GalleryImage(image types.Image){
     }
 }
 
-type FormData struct {
-    Prompt string
-    Amount int
+type FormErrors struct {
+	Prompt        string
+	Amount        string
+	CreditsNeeded int
+	UserCredits   int
+	Credits       bool
 }
 
-type FormErrors struct {
-    Prompt string
-    Amount string
+type FormData struct {
+	Prompt string
+	Amount int
 }
 
 
@@ -95,6 +101,9 @@ templ Form(params FormData, errors FormErrors){
             <button class="btn btn-primary w-full mt-4">Generate</button>
         </div>
     </form>
+    if errors.Credits {
+		@ui.CreditsModal(errors.CreditsNeeded, errors.UserCredits)
+	}
 }
 
 var amounts = []string{

@@ -24,7 +24,7 @@ func main() {
 
 	router := chi.NewMux()
 
-	// router.Use(handler.WithUser)
+	router.Use(handler.WithUser)
 
 	// Handler for static files
 	router.Handle("/*", http.StripPrefix("/", http.FileServer(http.FS(FS))))

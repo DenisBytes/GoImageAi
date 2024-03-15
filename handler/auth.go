@@ -17,6 +17,11 @@ import (
 	"github.com/nedpals/supabase-go"
 )
 
+const (
+	sessionUserKey        = "user"
+	sessionAccessTokenKey = "accessToken"
+)
+
 func HandleLogInIndex(w http.ResponseWriter, r *http.Request) error {
 	return auth.Login().Render(r.Context(), w)
 }

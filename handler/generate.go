@@ -19,6 +19,8 @@ import (
 	"github.com/uptrace/bun"
 )
 
+const creditsPerImage = 2
+
 func HandleGenerateIndex(w http.ResponseWriter, r *http.Request) error {
 	user := GetAuthenticatedUser(r)
 	images, err := db.GetImagesByUserID(user.ID)
@@ -33,7 +35,6 @@ func HandleGenerateIndex(w http.ResponseWriter, r *http.Request) error {
 
 func HandleGeneratePost(w http.ResponseWriter, r *http.Request) error {
 	user := GetAuthenticatedUser(r)
-
 	amount, _ := strconv.Atoi(r.FormValue("amount"))
 	params := generate.FormData{
 		Prompt: r.FormValue("prompt"),
@@ -41,22 +42,27 @@ func HandleGeneratePost(w http.ResponseWriter, r *http.Request) error {
 	}
 	var errors generate.FormErrors
 
-	fmt.Println(params.Prompt)
-
 	if amount <= 0 || amount > 8 {
 		errors.Amount = "Please enter a valid amount"
 		return generate.Form(params, errors).Render(r.Context(), w)
 	}
-	ok := validate.New(params, validate.Fields{
-		"Prompt": validate.Rules(validate.Max(100), validate.Min(10)),
-	}).Validate(&errors)
 
+	ok := validate.New(params, validate.Fields{
+		"Prompt": validate.Rules(validate.Min(10), validate.Max(100)),
+	}).Validate(&errors)
 	if !ok {
 		return generate.Form(params, errors).Render(r.Context(), w)
 	}
 
-	batchID := uuid.New()
+	creditsNeeded := params.Amount * creditsPerImage
+	if user.Account.Credits < creditsNeeded {
+		errors.CreditsNeeded = creditsNeeded
+		errors.UserCredits = user.Account.Credits
+		errors.Credits = true
+		return generate.Form(params, errors).Render(r.Context(), w)
+	}
 
+	batchID := uuid.New()
 	genParams := GenerateImageParams{
 		Prompt:  params.Prompt,
 		Amount:  params.Amount,
@@ -71,7 +77,6 @@ func HandleGeneratePost(w http.ResponseWriter, r *http.Request) error {
 	err := db.Bun.RunInTx(r.Context(), &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		for i := 0; i < params.Amount; i++ {
 			img := types.Image{
-				Prompt:  params.Prompt,
 				UserID:  user.ID,
 				Status:  types.ImageStatusPending,
 				BatchID: batchID,
@@ -86,7 +91,6 @@ func HandleGeneratePost(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	return hxRedirect(w, r, "/generate")
-	// return generate.GalleryImage(img).Render(r.Context(), w)
 }
 
 func HandleGenerateImageStatus(w http.ResponseWriter, r *http.Request) error {
@@ -94,11 +98,11 @@ func HandleGenerateImageStatus(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	image, err := db.GetImagesByID(id)
+	image, err := db.GetImageByID(id)
 	if err != nil {
 		return err
 	}
-	slog.Info("Checking images status", "id", id)
+	slog.Info("checking image status", "id", id)
 	return generate.GalleryImage(image).Render(r.Context(), w)
 }
 
@@ -114,19 +118,14 @@ func generateImages(ctx context.Context, params GenerateImageParams) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	version := "ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4"
-
 	input := replicate.PredictionInput{
-		"prompt":      params.Amount,
+		"prompt":      params.Prompt,
 		"num_outputs": params.Amount,
 	}
-
 	webhook := replicate.Webhook{
 		URL:    fmt.Sprintf("https://webhook.site/5fe9f245-ef5c-432c-931e-6eeff587066b/%s/%s", params.UserID, params.BatchID),
 		Events: []replicate.WebhookEventType{"start", "completed"},
 	}
-
-	_, err = r8.CreatePrediction(ctx, version, input, &webhook, false)
+	_, err = r8.CreatePrediction(ctx, "d70beb400d223e6432425a5299910329c6050c6abcf97b8c70537d6a1fcb269a", input, &webhook, false)
 	return err
 }
