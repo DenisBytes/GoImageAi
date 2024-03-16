@@ -57,6 +57,9 @@ func main() {
 		auth.Get("/generate", handler.MakeHandler(handler.HandleGenerateIndex))
 		auth.Post("/generate", handler.MakeHandler(handler.HandleGeneratePost))
 		auth.Get("/generate/image/status/{id}", handler.MakeHandler(handler.HandleGenerateImageStatus))
+		auth.Get("/checkout/{productID}", handler.MakeHandler(handler.HandleStripeCheckoutPost))
+
+		auth.Get("/buy-credits", handler.MakeHandler(handler.HandleCreditsIndex))
 
 	})
 

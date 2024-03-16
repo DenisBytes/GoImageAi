@@ -1,0 +1,51 @@
+package credits
+
+import "com.github.denisbytes.goimageai/view/layout"
+import "fmt"
+
+type Pricing struct {
+    Credits string
+    Price string
+    ProductID string
+}
+
+var prices = []Pricing{
+    {
+        Credits: "100",
+        Price: "9.99",
+        ProductID: "",
+    },
+    {
+        Credits: "250",
+        Price: "19.99",
+        ProductID: "",
+    },
+    {
+        Credits: "550",
+        Price: "29.99",
+        ProductID: "",
+    },
+}
+templ Index() {
+
+    @layout.App(true){
+        <div class="w-full max-w-4xl bg-base-300 rounded-xl px-8 py-24 mt-12 mx-auto">
+            <div class="flex justify-evenly">
+                for _, price := range prices{
+                    @PriceCard(price)
+                }
+            </div>
+        </div>
+    }
+}
+
+templ PriceCard(pricing Pricing) {
+    <div hx-get={ fmt.Sprintf("/checkout/%s", pricing.ProductID) } class="border border-primary hover:border-secondary px-6 py-4 rounded-lg text-center cursor-pointer">
+        <div class="text-2xl font-black text-secondary mb">
+            {pricing.Credits}
+        </div>
+        <div class="text-xl">
+            {pricing.Price}
+        </div>
+    </div>
+}
