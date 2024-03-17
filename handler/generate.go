@@ -62,6 +62,11 @@ func HandleGeneratePost(w http.ResponseWriter, r *http.Request) error {
 		return generate.Form(params, errors).Render(r.Context(), w)
 	}
 
+	user.Account.Credits -= creditsNeeded
+	if err := db.UpdateAccount(&user.Account); err != nil {
+		return err
+	}
+
 	batchID := uuid.New()
 	genParams := GenerateImageParams{
 		Prompt:  params.Prompt,
@@ -124,7 +129,7 @@ func generateImages(ctx context.Context, params GenerateImageParams) error {
 	}
 	webhook := replicate.Webhook{
 		URL:    fmt.Sprintf("https://webhook.site/5fe9f245-ef5c-432c-931e-6eeff587066b/%s/%s", params.UserID, params.BatchID),
-		Events: []replicate.WebhookEventType{"start", "completed"},
+		Events: []replicate.WebhookEventType{"completed"},
 	}
 	_, err = r8.CreatePrediction(ctx, "d70beb400d223e6432425a5299910329c6050c6abcf97b8c70537d6a1fcb269a", input, &webhook, false)
 	return err
