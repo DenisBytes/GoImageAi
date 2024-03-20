@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -26,51 +23,21 @@ func HandleLogInIndex(w http.ResponseWriter, r *http.Request) error {
 	return auth.Login().Render(r.Context(), w)
 }
 
-func HandleSignUpIndex(w http.ResponseWriter, r *http.Request) error {
-	return auth.SignUp().Render(r.Context(), w)
-}
-
-func HandleSignUpPost(w http.ResponseWriter, r *http.Request) error {
-	params := auth.SignUpParams{
-		Email:           r.FormValue("email"),
-		Password:        r.FormValue("password"),
-		ConfirmPassword: r.FormValue("confirmPassword"),
-	}
-	errors := auth.SignUpErrors{}
-	if ok := validate.New(&params, validate.Fields{
-		"Email":           validate.Rules(validate.Email),
-		"Password":        validate.Rules(validate.Password),
-		"ConfirmPassword": validate.Rules(validate.Equal(params.Password), validate.Message("Password don't match")),
-	}).Validate(&errors); !ok {
-		return auth.SignUpForm(params, errors).Render(r.Context(), w)
-	}
-	user, err := sb.Client.Auth.SignUp(r.Context(), supabase.UserCredentials{
-		Email:    params.Email,
-		Password: params.Password,
-	})
-	if err != nil {
-		return err
-	}
-	return auth.SignUpSuccess(user.Email).Render(r.Context(), w)
-}
-
 func HandleLoginPost(w http.ResponseWriter, r *http.Request) error {
 	credentials := supabase.UserCredentials{
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password"),
+		Email: r.FormValue("email"),
 	}
-
-	resp, err := sb.Client.Auth.SignIn(r.Context(), credentials)
+	err := sb.Client.Auth.SendMagicLink(r.Context(), credentials.Email)
 	if err != nil {
 		slog.Error("login error", "err", err)
 		return auth.LoginForm(credentials, auth.LoginErrors{
-			InvalidCredentials: "The crdentials you have entered are invalid",
+			InvalidCredentials: err.Error(),
 		}).Render(r.Context(), w)
 	}
-	if err := setAuthSession(w, r, resp.AccessToken); err != nil {
-		return err
-	}
-	return hxRedirect(w, r, "/")
+	// if err := setAuthSession(w, r, resp.AccessToken); err != nil {
+	// 	return err
+	// }
+	return auth.MagicLinkSuccess(credentials.Email).Render(r.Context(), w)
 }
 
 func HandleAuthCallback(w http.ResponseWriter, r *http.Request) error {
@@ -112,6 +79,7 @@ func HandleLoginWithGithubPost(w http.ResponseWriter, r *http.Request) error {
 	http.Redirect(w, r, resp.URL, http.StatusSeeOther)
 	return nil
 }
+
 func HandleAccountSetupIndex(w http.ResponseWriter, r *http.Request) error {
 	return auth.AccountSetup().Render(r.Context(), w)
 }
@@ -136,46 +104,5 @@ func HandleAccountSetupPost(w http.ResponseWriter, r *http.Request) error {
 	if err := db.CreateAccount(&account); err != nil {
 		return err
 	}
-	return hxRedirect(w, r, "/")
-}
-
-func HandleResetPasswordIndex(w http.ResponseWriter, r *http.Request) error {
-	return auth.ResetPassword().Render(r.Context(), w)
-}
-
-func HandleResetPasswordPost(w http.ResponseWriter, r *http.Request) error {
-	user := GetAuthenticatedUser(r)
-	params := map[string]any{
-		"email":      user.Email,
-		"redirectTo": "http://localhost:3000/auth/reset-password",
-	}
-	b, err := json.Marshal(params)
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s", sb.BaseAuthURL), bytes.NewReader(b))
-	req.Header.Set("apikey", os.Getenv("SUPABASE_SECRET"))
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("supabase password recovery responded with a non 200status code: %d", resp.StatusCode)
-	}
-
-	return auth.ResetPasswordInitiated(user.Email).Render(r.Context(), w)
-}
-
-func HandleResetPasswordUpdate(w http.ResponseWriter, r *http.Request) error {
-	user := GetAuthenticatedUser(r)
-	params := map[string]any{
-		"password": r.FormValue("password"),
-	}
-	resp, err := sb.Client.Auth.UpdateUser(r.Context(), user.AccessToken, params)
-	if err != nil {
-		return auth.ResetPasswordForm(auth.ResetPasswordErrors{NewPassword: "Please enter a valid password"}).Render(r.Context(), w)
-	}
-	_ = resp
 	return hxRedirect(w, r, "/")
 }

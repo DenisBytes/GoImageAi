@@ -33,11 +33,10 @@ func main() {
 	router.Get("/login", handler.MakeHandler(handler.HandleLogInIndex))
 	router.Get("/login/provider/github", handler.MakeHandler(handler.HandleLoginWithGithubPost))
 	router.Post("/login", handler.MakeHandler(handler.HandleLoginPost))
-	router.Get("/signup", handler.MakeHandler(handler.HandleSignUpIndex))
-	router.Post("/signup", handler.MakeHandler(handler.HandleSignUpPost))
 	router.Get("/auth/callback", handler.MakeHandler(handler.HandleAuthCallback))
 	router.Post("/logout", handler.MakeHandler(handler.HandleLogoutPost))
 	router.Post("/replicate/callback/{userID}/{batchID}", handler.MakeHandler(handler.HandleReplicateCallback))
+	router.Get("/long-process", handler.MakeHandler(handler.HandleLongProcess))
 
 	router.Group(func(auth chi.Router) {
 		auth.Use(handler.WithAuth)
@@ -49,10 +48,6 @@ func main() {
 		auth.Use(handler.WithAuth, handler.WithAccountSetup)
 		auth.Get("/settings", handler.MakeHandler(handler.HandleSettingsIndex))
 		auth.Put("/settings/account/profile", handler.MakeHandler(handler.HandleSettingsUsernameUpdate))
-
-		auth.Get("/auth/reset-password", handler.MakeHandler(handler.HandleResetPasswordIndex))
-		auth.Post("/auth/reset-password", handler.MakeHandler(handler.HandleResetPasswordPost))
-		auth.Put("/auth/reset-password", handler.MakeHandler(handler.HandleResetPasswordUpdate))
 
 		auth.Get("/generate", handler.MakeHandler(handler.HandleGenerateIndex))
 		auth.Post("/generate", handler.MakeHandler(handler.HandleGeneratePost))

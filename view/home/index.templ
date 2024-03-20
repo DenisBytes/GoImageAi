@@ -2,6 +2,7 @@ package home
 
 import (
     "com.github.denisbytes.goimageai/view/layout"
+	"com.github.denisbytes.goimageai/view"
 )
 
 templ Index() {
@@ -10,6 +11,15 @@ templ Index() {
             <h1 class="font-black text-5xl leading-[1,2] mb-2">Hello from the home page</h1>
             <h2 class="text-xl font-semibold mb-2">this is some AI application</h2>
             <a href="/generate" class="btn btn-primary">Generate Images Now <i class="fa-solid fa-arrow-right"></i></a>
+            <div hx-get="/long-process" hx-trigger="load" hx-indicator="#spinner" class="mt-22 text-5xl">
+                <span id="spinner" class="loading loading-ring loading-lg htmx-indicator"></span>
+            </div>
         </div>
     }
+}
+
+templ UserLikes(likes int){
+    <div>
+        {view.String(likes)} user likes
+    </div>
 }
